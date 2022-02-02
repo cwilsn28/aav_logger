@@ -1,0 +1,6 @@
+version: '3'
+
+services:
+  aav_logger-app:
+    build: .
+    container_name: aav_logger-app

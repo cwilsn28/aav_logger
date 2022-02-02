@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  aav_logger-app:
+    env_file:
+      - .env-dev
+    volumes:
+      - .:/go/src/aav_logger
+      - ./scripts:/scripts
+      - ./uploads/csv:/aav_logger/uploads/csv
+    ports:
+      - 9000:9000
+    links:
+      - aav_logger-db
+    depends_on:
+      - aav_logger-db
+    entrypoint: ["/scripts/wait-for-it.sh", "-t", "60", "aav_logger-db:5432", "--", "revel", "run", "aav_logger"]
+  aav_logger-db:
+    image: postgres:latest
+    container_name: "aav_logger-db"
+    environment:
+      - POSTGRES_USER=aav_logger
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./sql/pg/load:/docker-entrypoint-initdb.d

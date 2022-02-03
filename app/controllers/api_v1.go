@@ -3,6 +3,7 @@ package controllers
 import (
 	"aav_logger/app/models"
 	"aav_logger/app/transactions"
+	"aav_logger/app/utils"
 	"encoding/json"
 	"fmt"
 
@@ -47,9 +48,19 @@ func (c APIV1) NewFlight() revel.Result {
  * --- */
 func (c APIV1) NewFlightBulk() revel.Result {
 	if c.Request.Method == "POST" {
+		// Get the file from the request
+		multipartFile := c.Params.Files["logfile"]
 
-		// For now, test the endpoint with a file currently on disk.
-		logfile := "uploads/csv/test_flights.csv"
+		// TODO: Add a sanity check on the file
+
+		// Save a copy of the log to disk
+		logfile, err := utils.SaveLogFile(multipartFile)
+		if err != nil {
+			fmt.Println(err)
+			return ServerError("A server error occurred")
+		}
+
+		// Insert records from the saved file
 		insertCount, err := transactions.InsertFlightBulk(DBCONN, logfile)
 		if err != nil {
 			fmt.Println(err)

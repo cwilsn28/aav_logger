@@ -12,6 +12,7 @@ GET     /                                       App.Index
 # API Endpoints
 
 POST /api/v1/flight 								APIV1.NewFlight
+POST /api/v1/flights 								APIV1.NewFlightBulk
 
 
 # Ignore favicon requests

@@ -72,3 +72,25 @@ func (c APIV1) NewFlightBulk() revel.Result {
 	}
 	return MethodNotAllowed("")
 }
+
+/* ---
+ * Read flights from store
+ * --- */
+func (c APIV1) Flights() revel.Result {
+	if c.Request.Method == "GET" {
+		flights, err := transactions.Flights(DBCONN)
+		if err != nil {
+			fmt.Println(err)
+			return ServerError("A server error occurred")
+		}
+
+		responseJSON, err := json.Marshal(map[string][]models.Flight{"flights": flights})
+		if err != nil {
+			fmt.Println(err)
+			return ServerError("A server error occurred")
+		}
+		return Accepted(string(responseJSON))
+
+	}
+	return MethodNotAllowed("")
+}

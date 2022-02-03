@@ -10,9 +10,14 @@ module:testrunner
 GET     /                                       App.Index
 
 # API Endpoints
-
+# Insertion endpoints
 POST /api/v1/flight 								APIV1.NewFlight
 POST /api/v1/flights 								APIV1.NewFlightBulk
+
+# Retreival endpoints
+GET /api/v1/flights 								APIV1.Flights
+
+
 
 
 # Ignore favicon requests

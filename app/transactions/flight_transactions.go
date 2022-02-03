@@ -128,6 +128,53 @@ func InsertFlightBulk(db *sql.DB, flightlog string) (int64, error) {
 	return recordCount, err
 }
 
+/* ---
+ * All flights
+ * --- */
+func Flights(db *sql.DB) ([]models.Flight, error) {
+	var err error
+	var flights []models.Flight
+
+	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	query := psql.Select("*").From("flights")
+
+	SQL, args, err := query.ToSql()
+	if err != nil {
+		return flights, err
+	}
+
+	stmt, err := db.Prepare(SQL)
+	if err != nil {
+		return flights, err
+	}
+
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return flights, err
+	}
+	for rows.Next() {
+		flight := models.Flight{}
+		err := rows.Scan(
+			&flight.ID,
+			&flight.Robot,
+			&flight.Generation,
+			&flight.Start,
+			&flight.Stop,
+			&flight.Lat,
+			&flight.Lon,
+		)
+		if err != nil {
+			return flights, err
+		}
+		flights = append(flights, flight)
+	}
+	stmt.Close()
+	return flights, err
+}
+
+/* ---
+ * Retrieve flight with specified ID
+ * --- */
 func FlightWithID(db *sql.DB, flightID int64) (models.Flight, error) {
 	var err error
 	var flightRecord models.Flight

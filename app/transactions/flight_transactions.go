@@ -131,12 +131,30 @@ func InsertFlightBulk(db *sql.DB, flightlog string) (int64, error) {
 /* ---
  * All flights
  * --- */
-func Flights(db *sql.DB) ([]models.Flight, error) {
+func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	var err error
 	var flights []models.Flight
 
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 	query := psql.Select("*").From("flights")
+
+	// Dynamically build a query based on available parameters
+	// Need to consider corner cases associate with this approach
+	if params["robot"] != "" {
+		query = query.Where("robot=?", params["robot"])
+	}
+	if params["generation"] != "" {
+		query = query.Where("generation=?", params["generation"])
+	}
+	if params["start"] != "" {
+		query = query.Where("start >= ?", params["start"])
+	}
+	if params["stop"] != "" {
+		query = query.Where("stop <= ?", params["stop"])
+	}
+	if params["duration"] != "" {
+		query = query.Where("extract(MINUTE FROM (stop - start)) <= ?", params["duration"])
+	}
 
 	SQL, args, err := query.ToSql()
 	if err != nil {

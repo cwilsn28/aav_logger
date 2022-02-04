@@ -6,6 +6,7 @@ import (
 	"aav_logger/app/utils"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/revel/revel"
 )
@@ -78,19 +79,35 @@ func (c APIV1) NewFlightBulk() revel.Result {
  * --- */
 func (c APIV1) Flights() revel.Result {
 	if c.Request.Method == "GET" {
-		flights, err := transactions.Flights(DBCONN)
+		// Parse the query parameters
+		params := parseParams(c.Params.Query)
+
+		// Query flights based on supplied params
+		flights, err := transactions.Flights(DBCONN, params)
 		if err != nil {
 			fmt.Println(err)
 			return ServerError("A server error occurred")
 		}
 
+		// Marshal and return the results
 		responseJSON, err := json.Marshal(map[string][]models.Flight{"flights": flights})
 		if err != nil {
 			fmt.Println(err)
 			return ServerError("A server error occurred")
 		}
 		return Accepted(string(responseJSON))
-
 	}
 	return MethodNotAllowed("")
+}
+
+func parseParams(v url.Values) map[string]string {
+	var params = make(map[string]string)
+
+	// Parse expected params based on obj/schema attributes
+	params["robot"] = v.Get("robot")
+	params["generation"] = v.Get("generation")
+	params["start"] = v.Get("start")
+	params["stop"] = v.Get("stop")
+	params["duration"] = v.Get("duration")
+	return params
 }

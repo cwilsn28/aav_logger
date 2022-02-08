@@ -24,6 +24,14 @@ func (c APIV1) NewFlight() revel.Result {
 		var newFlight models.Flight
 		c.Params.BindJSON(&newFlight)
 
+		// Do a crude validation on the post data before attempting the transaction
+		valid, msg := newFlight.IsValid()
+		if !valid {
+			resp := models.APIResponse{Status: "api_error", Message: msg}
+			responseJSON, _ := json.Marshal(resp)
+			return OK(responseJSON)
+		}
+
 		// Insert the flight record
 		flightID, err := transactions.InsertFlight(DBCONN, newFlight)
 		if err != nil {
@@ -101,7 +109,6 @@ func (c APIV1) Flights() revel.Result {
 
 		// Query flights based on supplied params
 		flights, err := transactions.Flights(DBCONN, params)
-		fmt.Println("HEY", flights, err)
 		if err != nil {
 			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
 			responseJSON, _ := json.Marshal(resp)

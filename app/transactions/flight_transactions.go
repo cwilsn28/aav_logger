@@ -16,32 +16,26 @@ import (
 
 func InsertFlight(db *sql.DB, flight models.Flight) (int64, error) {
 	var err error
-	var recordID int64
+	var flightID int64
 
-	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	query := psql.Insert("flights").Values(
-		"DEFAULT",
+	// Just write the SQL in this case.
+	var SQL string = `INSERT INTO flights VALUES(DEFAULT,$1,$2,$3,$4,$5,$6) RETURNING id;`
+	stmt, err := db.Prepare(SQL)
+	if err != nil {
+		return flightID, err
+	}
+
+	err = stmt.QueryRow(
 		flight.Robot,
 		flight.Generation,
 		flight.Start,
 		flight.Stop,
 		flight.Lat,
 		flight.Lon,
-	).Suffix("RETURNING id")
+	).Scan(&flightID)
 
-	SQL, args, err := query.ToSql()
-	if err != nil {
-		return recordID, err
-	}
-
-	stmt, err := db.Prepare(SQL)
-	if err != nil {
-		return recordID, err
-	}
-
-	err = stmt.QueryRow(args...).Scan(&recordID)
 	stmt.Close()
-	return recordID, err
+	return flightID, nil
 }
 
 func InsertFlightBulk(db *sql.DB, flightlog string) (int64, error) {
@@ -135,11 +129,15 @@ func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	var err error
 	var flights []models.Flight
 
+	// Use squirrel to dynamically build the query
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 	query := psql.Select("*").From("flights")
 
-	// Dynamically build a query based on available parameters
+	// Build a query based on available parameters
 	// Need to consider corner cases associate with this approach
+	if params["id"] != "" {
+		query = query.Where("id=?", params["id"])
+	}
 	if params["robot"] != "" {
 		query = query.Where("robot=?", params["robot"])
 	}
@@ -188,39 +186,6 @@ func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	}
 	stmt.Close()
 	return flights, err
-}
-
-/* ---
- * Retrieve flight with specified ID
- * --- */
-func FlightWithID(db *sql.DB, flightID int64) (models.Flight, error) {
-	var err error
-	var flightRecord models.Flight
-
-	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	query := psql.Select("*").From("flights").Where("id=$", flightID)
-
-	SQL, args, err := query.ToSql()
-	if err != nil {
-		return flightRecord, err
-	}
-
-	stmt, err := db.Prepare(SQL)
-	if err != nil {
-		return flightRecord, err
-	}
-
-	err = stmt.QueryRow(args...).Scan(
-		&flightRecord.ID,
-		&flightRecord.Robot,
-		&flightRecord.Generation,
-		&flightRecord.Start,
-		&flightRecord.Stop,
-		&flightRecord.Lat,
-		&flightRecord.Lon,
-	)
-	stmt.Close()
-	return flightRecord, err
 }
 
 // Local helpers

@@ -25,20 +25,31 @@ func (c APIV1) NewFlight() revel.Result {
 		c.Params.BindJSON(&newFlight)
 
 		// Insert the flight record
-		recordID, err := transactions.InsertFlight(DBCONN, newFlight)
+		flightID, err := transactions.InsertFlight(DBCONN, newFlight)
 		if err != nil {
 			// TODO: Log the error
-			return ServerError("A server error occurred")
+			fmt.Println(err)
+			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
+			responseJSON, _ := json.Marshal(resp)
+			return ServerError(responseJSON)
 		}
 
-		// Send back a copy of the record from the database
-		flight, err := transactions.FlightWithID(DBCONN, recordID)
+		// Query the flight we just inserted and echo it back in the response.
+		/* --- Stringify the id so we can use the Flights transaction --- */
+		queryParams := map[string]string{"id": fmt.Sprint(flightID)}
+
+		flights, err := transactions.Flights(DBCONN, queryParams)
 		if err != nil {
 			// TODO: Log the error
-			return ServerError("A server error occurred")
+			fmt.Println(err)
+			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
+			responseJSON, _ := json.Marshal(resp)
+			return ServerError(responseJSON)
 		}
 
-		responseJSON, _ := json.Marshal(flight)
+		// Marshal the response, send it back!
+		resp := models.APIResponse{Status: "success", Results: flights}
+		responseJSON, _ := json.Marshal(resp)
 		return Created(string(responseJSON))
 	}
 	return MethodNotAllowed("")
@@ -84,18 +95,22 @@ func (c APIV1) Flights() revel.Result {
 
 		// Query flights based on supplied params
 		flights, err := transactions.Flights(DBCONN, params)
-		if err != nil {
-			fmt.Println(err)
-			return ServerError("A server error occurred")
+		if err != nil && err.Error() == "sql: no rows in result set" {
+			resp := models.APIResponse{Status: "api_error", Message: "No records matched your query"}
+			responseJSON, _ := json.Marshal(resp)
+			return OK(responseJSON)
+
+		} else if err != nil {
+			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
+			responseJSON, _ := json.Marshal(resp)
+			return ServerError(responseJSON)
 		}
 
 		// Marshal and return the results
-		responseJSON, err := json.Marshal(map[string][]models.Flight{"flights": flights})
-		if err != nil {
-			fmt.Println(err)
-			return ServerError("A server error occurred")
-		}
-		return Accepted(string(responseJSON))
+		// Marshal the response, send it back!
+		resp := models.APIResponse{Status: "success", Results: flights}
+		responseJSON, _ := json.Marshal(resp)
+		return OK(string(responseJSON))
 	}
 	return MethodNotAllowed("")
 }
@@ -104,6 +119,7 @@ func parseParams(v url.Values) map[string]string {
 	var params = make(map[string]string)
 
 	// Parse expected params based on obj/schema attributes
+	params["id"] = v.Get("id")
 	params["robot"] = v.Get("robot")
 	params["generation"] = v.Get("generation")
 	params["start"] = v.Get("start")

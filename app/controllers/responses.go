@@ -9,7 +9,13 @@ import (
 type Accepted string
 type Created string
 type MethodNotAllowed string
+type OK string
 type ServerError string
+
+func (r OK) Apply(req *revel.Request, resp *revel.Response) {
+	resp.WriteHeader(http.StatusOK, "application/json")
+	resp.GetWriter().Write([]byte(r))
+}
 
 func (r Accepted) Apply(req *revel.Request, resp *revel.Response) {
 	resp.WriteHeader(http.StatusAccepted, "application/json")

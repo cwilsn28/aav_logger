@@ -68,15 +68,21 @@ func (c APIV1) NewFlightBulk() revel.Result {
 		// Save a copy of the log to disk
 		logfile, err := utils.SaveLogFile(multipartFile)
 		if err != nil {
+			//TODO: Log the error
 			fmt.Println(err)
-			return ServerError("A server error occurred")
+			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
+			responseJSON, _ := json.Marshal(resp)
+			return ServerError(responseJSON)
 		}
 
 		// Insert records from the saved file
 		insertCount, err := transactions.InsertFlightBulk(DBCONN, logfile)
 		if err != nil {
+			//TODO: Log the error
 			fmt.Println(err)
-			return ServerError("A server error occurred")
+			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
+			responseJSON, _ := json.Marshal(resp)
+			return ServerError(responseJSON)
 		}
 
 		responseJSON, _ := json.Marshal(map[string]int64{"records_inserted": insertCount})

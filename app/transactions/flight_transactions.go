@@ -168,6 +168,7 @@ func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	if err != nil {
 		return flights, err
 	}
+	fmt.Printf("%+v\n", rows)
 	for rows.Next() {
 		flight := models.Flight{}
 		err := rows.Scan(

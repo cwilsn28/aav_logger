@@ -101,20 +101,22 @@ func (c APIV1) Flights() revel.Result {
 
 		// Query flights based on supplied params
 		flights, err := transactions.Flights(DBCONN, params)
-		if err != nil && err.Error() == "sql: no rows in result set" {
-			resp := models.APIResponse{Status: "api_error", Message: "No records matched your query"}
-			responseJSON, _ := json.Marshal(resp)
-			return OK(responseJSON)
-
-		} else if err != nil {
+		fmt.Println("HEY", flights, err)
+		if err != nil {
 			resp := models.APIResponse{Status: "server_error", Message: "A server error occurred"}
 			responseJSON, _ := json.Marshal(resp)
 			return ServerError(responseJSON)
 		}
 
-		// Marshal and return the results
+		// Account for no results.
+		resp := models.APIResponse{}
+		if len(flights) == 0 {
+			resp = models.APIResponse{Status: "api_error", Message: "No records matched your query"}
+		} else {
+			resp = models.APIResponse{Status: "success", Results: flights}
+		}
+
 		// Marshal the response, send it back!
-		resp := models.APIResponse{Status: "success", Results: flights}
 		responseJSON, _ := json.Marshal(resp)
 		return OK(string(responseJSON))
 	}

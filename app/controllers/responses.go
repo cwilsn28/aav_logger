@@ -7,6 +7,7 @@ import (
 )
 
 type Accepted string
+type BadRequest string
 type Created string
 type MethodNotAllowed string
 type OK string
@@ -19,6 +20,11 @@ func (r OK) Apply(req *revel.Request, resp *revel.Response) {
 
 func (r Accepted) Apply(req *revel.Request, resp *revel.Response) {
 	resp.WriteHeader(http.StatusAccepted, "application/json")
+	resp.GetWriter().Write([]byte(r))
+}
+
+func (r BadRequest) Apply(req *revel.Request, resp *revel.Response) {
+	resp.WriteHeader(http.StatusBadRequest, "application/json")
 	resp.GetWriter().Write([]byte(r))
 }
 

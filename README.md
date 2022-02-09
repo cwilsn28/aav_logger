@@ -14,39 +14,39 @@ Once the service is running, the API will be exposed at:
 
 http://localhost:9000/api/v1
 
-The following endpoints are available:
+### The following endpoints are available:
 
     POST /api/v1/flight     Insert a single log record
     POST /api/v1/flights    Insert multiple logs via csv upload
     GET /api/v1/flights     Query flight logs
 
-Inserting a single record
+### Inserting a single record
 
     POST /api/v1/flight
     
     Request fields:
     
-    robot: string
+    robot: string; REQUIRED
     The unique name of the drone.
 
-    generation: integer
+    generation: integer; REQUIRED
     The generation number of the drone.
 
-    start: string
+    start: string; REQUIRED
     Flight start time as a UTC timestamp.
 
-    stop: string
+    stop: string; REQUIRED
     Flight end time as a UTC timestamp.
 
-    lat: float
+    lat: float; REQUIRED
     Flight latitude coordinate
 
-    lon: float
+    lon: float; REQUIRED
     Flight longitude coordinate
 
     EXAMPLE:
 
-    curl -X POST https://sandbox.plaid.com/transactions/get \
+    curl -X POST http://localhost:9000/api/v1/flight \
     -H 'Content-Type: application/json' \
     -d '{
             "robot":"drone-10",
@@ -56,6 +56,54 @@ Inserting a single record
             "lat":21.3069, 
             "lon":-157.8583
         }'   
+
+    **Note** An error will be returned for missing fields.
+### Inserting records in bulk
+
+    POST /api/v1/flights
+    
+    Request fields:
+    
+    logfile: multipart file; REQUIRED
+    The log file as a .csv
+
+    EXAMPLE:
+
+    curl -X POST http://localhost:9000/api/v1/flights \
+    -H 'Content-Type: multipart/form-data' \
+    -F 'logfile=@<path_to_logfile.csv>'
+
+    **Note**
+    The .csv file is assumed to have a header row describing the data. The column
+    ordering is assumed to be [robot, generation, start, stop, lat, lon]. This request 
+    can be tested using the included .csv file under test_data/
+
+### Querying records
+
+    GET /api/v1/flights
+
+    Query parameers:
+
+    robot: string
+    Return records for the specified robot
+
+    generation: integer
+    Return records for the specified generation
+
+    start: string
+    Return records with start time >= start
+
+    stop: string
+    Return records with start time <= stop
+
+    duration: integer
+    Return records for flight directions <= duration
+    
+    **Note** Query parameters can be combined.
+
+    EXAMPLE:
+    curl 'http://localhost:9000/api/v1/flights?robot=drone-10&generation=5&start=03-06-2019&stop=02-09-2021&duration=25'
+
 ## Code Layout
 
 The directory structure of a generic Revel application:

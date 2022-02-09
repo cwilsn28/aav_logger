@@ -134,7 +134,8 @@ func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	query := psql.Select("*").From("flights")
 
 	// Build a query based on available parameters
-	// Need to consider corner cases associate with this approach
+	// More efficient than construction strings but need
+	// to consider corner cases associate with this approach
 	if params["id"] != "" {
 		query = query.Where("id=?", params["id"])
 	}
@@ -168,7 +169,7 @@ func Flights(db *sql.DB, params map[string]string) ([]models.Flight, error) {
 	if err != nil {
 		return flights, err
 	}
-	fmt.Printf("%+v\n", rows)
+
 	for rows.Next() {
 		flight := models.Flight{}
 		err := rows.Scan(

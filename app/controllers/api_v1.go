@@ -33,7 +33,7 @@ func (c APIV1) NewFlight() revel.Result {
 		if !valid {
 			resp := models.APIResponse{Status: "api_error", Message: msg}
 			responseJSON, _ := json.Marshal(resp)
-			return OK(responseJSON)
+			return BadRequest(responseJSON)
 		}
 
 		// Insert the flight record

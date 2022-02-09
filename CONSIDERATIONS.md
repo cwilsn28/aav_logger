@@ -1,0 +1,7 @@
+# Additional Considerations
+
+1) **Security - How would you protect against outsiders from inserting/querying logs?** *To prevent unauthorized access, all requests could be authenticated with some form of token (Opaque or JWT) or alternatively, an access key that would be supplied in the body of each request. JWT might be a good option as the tokens could be scoped allowing access to queries but preventing a user from inserting, etc.*
+
+2) **Scalability - How would you handle redundancy and availability if the system had to scale to 1 million requests/sec?** *Depending on how the requests are distributed, splitting the API into micro-services might be a good first step. This would allow for specific tuning on each type of request (e.g., caching query results, etc., queuing inserts, databases tuned for insertions vs query).*
+
+3) **Data Integrity/Storage - How would you ensure data consistency, integrity, and retrieval if you had to store 100 million drone flight logs?** *To start, I would use two separate stores. One for ingestion of data, the other for consumption. I would use a QC pipeline to move data from the input store to the query store with the latter being the source of truth. Any updates to the query store would be made through the QC pipeline which would have a mechanism for updating, replacing or invalidating records.*  

@@ -8,3 +8,5 @@ CREATE TABLE flights (
 	lon double precision
 );
 GRANT ALL ON TABLE flights TO aav_logger;
+
+CREATE INDEX ON flights (robot, generation);

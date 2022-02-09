@@ -25,6 +25,10 @@ func (c APIV1) NewFlight() revel.Result {
 		c.Params.BindJSON(&newFlight)
 
 		// Do a crude validation on the post data before attempting the transaction
+		// This could be made more versatile depending on requirements
+		// As it is, will ensure the following are present:
+		// robot, generation, start, stop, lat, lon
+		// No other sanity checking is performed
 		valid, msg := newFlight.IsValid()
 		if !valid {
 			resp := models.APIResponse{Status: "api_error", Message: msg}
@@ -116,11 +120,11 @@ func (c APIV1) Flights() revel.Result {
 		}
 
 		// Account for no results.
-		resp := models.APIResponse{}
+		resp := models.APIResponse{Status: "success", Results: flights}
+
+		// If no records found, alert the user
 		if len(flights) == 0 {
-			resp = models.APIResponse{Status: "api_error", Message: "No records matched your query"}
-		} else {
-			resp = models.APIResponse{Status: "success", Results: flights}
+			resp.Message = "No records matched your query"
 		}
 
 		// Marshal the response, send it back!

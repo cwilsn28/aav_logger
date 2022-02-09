@@ -37,11 +37,11 @@ func (f Flight) IsValid() (bool, string) {
 	}
 	if f.Lat == 0 {
 		valid = false
-		msgs = append(msgs, "missing or invalid latitude time")
+		msgs = append(msgs, "missing or invalid latitude")
 	}
 	if f.Lat == 0 {
 		valid = false
-		msgs = append(msgs, "missing or invalid longitude time")
+		msgs = append(msgs, "missing or invalid longitude")
 	}
 	return valid, strings.Join(msgs, ", ")
 }
